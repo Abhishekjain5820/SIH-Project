@@ -85,7 +85,7 @@ export const loginController = async (req, res) => {
       });
     }
     //check user
-    const user = await userModel.findOne({ email });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).send({
         success: false,
@@ -109,7 +109,7 @@ export const loginController = async (req, res) => {
       message: "login successfully",
       user: {
         _id: user._id,
-        name: user.name,
+        name: user.username,
         email: user.email,
       },
       token,
@@ -149,8 +149,125 @@ export const userDetailsController = async (req, res) => {
     console.log(error);
     res.status(500).send({
       success: false,
-      message: "Error in fetchinf data",
+      message: "Error in fetching data",
       error,
     });
   }
 };
+
+export const updateController = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const { username, password } = req.body;
+    //password
+    if (password && password.length < 6) {
+      return res.json({ error: "Passsword is required and 6 character long" });
+    }
+    const hashedPassword = password ? await hashPassword(password) : undefined;
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        username: username || user.username,
+        password: hashedPassword || user.password,
+      },
+      { new: true }
+    );
+    res.status(200).send({
+      success: true,
+      message: "Profile Updated Successfully",
+      updatedUser,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error while updating user details",
+      error,
+    });
+  }
+};
+
+export const deleteStudentController = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const deletedUser = await User.findByIdAndDelete(userId);
+    res.status(200).send({
+      success: true,
+      message: "Profile Deleted Successfully",
+      deletedUser,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error while deleting student",
+      error,
+    });
+  }
+};
+
+export const deleteTeacherController = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if(user.role!=="teacher"){
+      return res.status(404).json({ message: "User is not a teacher" });
+    }
+
+    const deletedUser = await User.findByIdAndDelete(userId);
+    res.status(200).send({
+      success: true,
+      message: "Profile Deleted Successfully",
+      deletedUser,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error while deleting teacher",
+      error,
+    });
+  }
+};
+
+export const deleteStudentByTeacherController = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const deletedUser = await User.findByIdAndDelete(userId);
+    res.status(200).send({
+      success: true,
+      message: "Profile Deleted Successfully",
+      deletedUser,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error while deleting student by teacher",
+      error,
+    });
+  }
+};
+
